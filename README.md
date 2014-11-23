@@ -2,38 +2,44 @@ Angular module for dynamic asynchronous validation inspired with Waterline ORM m
 
 ## Installation
 
-Install via git:
+Install via bower:
+```
+bower install ng-validate
+```
+
+... or via git:
 
 ```
 git clone https://github.com/rumkin/ng-validate.git
 ```
 
+
 ## Usage
 
-To use validation you should to add 'ngValdiate' module and than to inject `$validate` service. Example:
+To use validation you should to add 'ngValidate' module and than to inject `$validate` service. Example:
 
 ```javascript
-    angular.module('App', ['ngValidate'])
-        .controller('exampleCtrl', ['$validate', function($validate){
-            // Data model
-            scope.model = {
-                value : {
-                    equals : true
-                }
-            };
-
-            // Method to validate model
-            scope.validate = function(data) {
-                $validate(data, $scope.model).then(function(data){
-                    // All right
-                    scope.$report = null;
-                }, function(report){
-                    // Something goes wrong.
-                    // Report could be used with angular-messages to show notification.
-                    scope.$report = report;
-                });
+angular.module('App', ['ngValidate'])
+    .controller('exampleCtrl', ['$validate', function($validate){
+        // Data model
+        scope.model = {
+            value : {
+                equals : true
             }
-        }]);
+        };
+
+        // Method to validate model
+        scope.validate = function(data) {
+            $validate(data, $scope.model).then(function(data){
+                // All right
+                scope.$report = null;
+            }, function(report){
+                // Something goes wrong.
+                // Report could be used with angular-messages to show notification.
+                scope.$report = report;
+            });
+        }
+    }]);
 ```
 
 ## Create custom validator
@@ -50,6 +56,7 @@ someModule.factory('equals?', function(){
 ```
 
 Validator could be an object either and could contain filter method to softly update values:
+
 ```javascript
 someModule.factory('default?', function(){
         return {
