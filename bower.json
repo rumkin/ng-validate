@@ -1,0 +1,26 @@
+{
+  "name": "ng-validate",
+  "version": "0.1.0",
+  "homepage": "https://github.com/rumkin/ng-validate",
+  "authors": [
+    "rumkin <dev@rumk.in>"
+  ],
+  "description": "Angular validation module",
+  "main": "src/ng-validate.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "angular",
+    "validate",
+    "model"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
