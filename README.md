@@ -121,16 +121,16 @@ someModule.factory('date?', function(){
 
 ## TODO v0.2.0
 
-[ ] Error handling and reporting
-[ ] Angular directive for form and input
+- [ ] Error handling and reporting
+- [ ] Angular directive for form and input
 
 # TODO v.0.3.0
 
-[ ] Add built in validators:
-    [ ] Default value.
-    [ ] Type.
-    [ ] Enum.
-    [ ] String: minLength, maxLength, regex, charset.
-    [ ] Date: before, after, range.
-    [ ] Number: min, max, range, greater then, less then and so.
-    [ ] Array: item model, length.
+- [ ] Add built in validators:
+    - [ ] Default value.
+    - [ ] Type.
+    - [ ] Enum.
+    - [ ] String: minLength, maxLength, regex, charset.
+    - [ ] Date: before, after, range.
+    - [ ] Number: min, max, range, greater then, less then and so.
+    - [ ] Array: item model, length.
