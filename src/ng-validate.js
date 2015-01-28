@@ -146,7 +146,7 @@
                                     resolve();
                                 });
                             } else if (result === true) {
-                                setTimeout(next, 1);
+                                next();
                             } else {
                                 hasErrors = true;
                                 report[name] = report[name]||{};
@@ -155,7 +155,7 @@
                             }
                         };
 
-                        setTimeout(next, 1);
+                        next();
                     });
                 });
 
