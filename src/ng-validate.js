@@ -26,40 +26,109 @@
              *  // Ooops...
              * });
              */
-            function ngValidate(data, model) {
+            function ngValidate(data, model, rules) {
                 var queue;
                 var hasErrors = false;
                 var report = {};
+                var getRule = function(rule) {
+                    if (rules.hasOwnProperty(rule)) return rules[rule];
 
+                    return $injector.get(rule + $validateOptions.validatorPostfix);
+                };
+                rules = rules||{};
                 data = angular.extend({}, data);
 
                 queue = Object.getOwnPropertyNames(model).map(function(name){
                     var rules = Object.getOwnPropertyNames(model[name]);
                     var value = data[name];
+                    var initial = data[name];
+
+                    var state = {
+                        /**
+                         * Get current field name
+                         * @returns {string}
+                         */
+                        get $name() {
+                            return name;
+                        },
+                        /**
+                         * Get current field value
+                         * @returns {*}
+                         */
+                        get $value() {
+                            return value;
+                        },
+                        /**
+                         * Get field rules
+                         * @returns {*}
+                         */
+                        get $rules() {
+                           return model[name];
+                        },
+                        /**
+                         * Define state dynamic property getter
+                         * @param {string} name property name
+                         * @param {function} getter Getter method
+                         * @returns {state}
+                         */
+                        $define : function(name, getter) {
+                            if (typeof getter === 'function') {
+                                Object.defineProperty(this, name, {
+                                    get : getter
+                                });
+                            } else {
+                                Object.defineProperty(this, name, {
+                                    value : getter
+                                });
+                            }
+                            return this;
+                        },
+                        /**
+                         * Check if current value is
+                         * @returns {boolean}
+                         */
+                        get isPristine() {
+                            return this.$value === initial;
+                        }
+                    };
+
+                    // Unwrap matches
+                    rules.forEach(function(rule){
+                        var service = getRule(rule);
+
+                        if (typeof service.before === 'function') {
+                            service.before.call(data, value, name, model, state);
+                        }
+                    });
 
                     report[name] = null;
                     return $q(function(resolve, reject){
                         var next = function() {
-                            if (! rules.length) return resolve();
+                            if (! rules.length) {
+                                // TODO Destroy state object
+                                value = null;
+                                return resolve();
+                            }
 
                             var rule, service, match, result, validator;
 
                             rule = rules.shift();
-                            service = $injector.get(rule + $validateOptions.validatorPostfix);
+                            service = getRule(rule);
                             match = model[name][rule];
 
-
                             if (typeof match === 'function') {
-                                match = match.call(data, value, name, model);
+                                match = match.call(data, value, name, model, state);
                             }
 
+                            model[name][rule] = match;
+
                             if (typeof service.filter === 'function') {
-                                value = service.filter.call(data, match, value, name, model);
+                                value = service.filter.call(data, match, value, name, model, state);
                             }
 
                             data[name] = value;
 
-                            if (typeof service == 'object') {
+                            if (typeof service === 'object') {
                                 validator = service.validate;
                             } else {
                                 validator = service;
@@ -67,9 +136,9 @@
 
                             if (typeof validator !== 'function') return setTimeout(next, 1);
 
-                            result = validator.call(data, match, value, name, model);
-                            // TODO Create full check fro promises
-                            if (result && typeof result === 'object' && typeof result.then === 'function') {
+                            result = validator.call(data, match, value, name, model, state);
+
+                            if (isPromise(result)) {
                                 result.then(next, function(result){
                                     hasErrors = true;
                                     report[name] = report[name]||{};
@@ -85,14 +154,28 @@
                                 resolve();
                             }
                         };
-                        next();
+
+                        setTimeout(next, 1);
                     });
                 });
 
                 return $q.all(queue).then(function(){
-                    if (hasErrors) return $q.reject(report);
-                    else return $q.when(data);
+                    if (hasErrors) $q.reject(report);
+                    else $q.when(data);
                 });
             }
         }]);
+
+    /**
+     *  Check if value is promise or promise-like object
+     * @param {*} value
+     * @returns {boolean}
+     */
+    function isPromise(value) {
+        if (!value || typeof value !== 'object') return false;
+        else if (typeof value.then !== 'function') return false;
+        else if (typeof value.catch !== 'function') return false;
+
+        return true;
+    }
 })(angular);
