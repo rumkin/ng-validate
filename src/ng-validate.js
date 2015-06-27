@@ -63,7 +63,7 @@
                          * @returns {*}
                          */
                         get $rules() {
-                           return model[name];
+                            return model[name];
                         },
                         /**
                          * Define state dynamic property getter
@@ -104,54 +104,58 @@
                     report[name] = null;
                     return $q(function(resolve, reject){
                         var next = function() {
-                            if (! rules.length) {
-                                // TODO Destroy state object
-                                value = null;
-                                return resolve();
-                            }
+                            try {
+                                if (! rules.length) {
+                                    // TODO Destroy state object
+                                    value = null;
+                                    return resolve();
+                                }
 
-                            var rule, service, match, result, validator;
+                                var rule, service, match, result, validator;
 
-                            rule = rules.shift();
-                            service = getRule(rule);
-                            match = model[name][rule];
+                                rule = rules.shift();
+                                service = getRule(rule);
+                                match = model[name][rule];
 
-                            if (typeof match === 'function') {
-                                match = match.call(data, value, name, model, state);
-                            }
+                                if (typeof match === 'function') {
+                                    match = match.call(data, value, name, model, state);
+                                }
 
-                            model[name][rule] = match;
+                                model[name][rule] = match;
 
-                            if (typeof service.filter === 'function') {
-                                value = service.filter.call(data, match, value, name, model, state);
-                            }
+                                if (typeof service.filter === 'function') {
+                                    value = service.filter.call(data, match, value, name, model, state);
+                                }
 
-                            data[name] = value;
+                                data[name] = value;
 
-                            if (typeof service === 'object') {
-                                validator = service.validate;
-                            } else {
-                                validator = service;
-                            }
+                                if (typeof service === 'object') {
+                                    validator = service.validate;
+                                } else {
+                                    validator = service;
+                                }
 
-                            if (typeof validator !== 'function') return setTimeout(next, 1);
+                                if (typeof validator !== 'function') return setTimeout(next, 1);
 
-                            result = validator.call(data, match, value, name, model, state);
+                                result = validator.call(data, match, value, name, model, state);
 
-                            if (isPromise(result)) {
-                                result.then(next, function(result){
+                                if (isPromise(result)) {
+                                    result.then(next, function(result){
+                                        hasErrors = true;
+                                        report[name] = report[name]||{};
+                                        report[name][rule] = result || true;
+                                        resolve();
+                                    });
+                                } else if (result === true) {
+                                    next();
+                                } else {
                                     hasErrors = true;
                                     report[name] = report[name]||{};
-                                    report[name][rule] = result || true;
+                                    report[name][rule] = result||true;
                                     resolve();
-                                });
-                            } else if (result === true) {
-                                next();
-                            } else {
-                                hasErrors = true;
-                                report[name] = report[name]||{};
-                                report[name][rule] = result||true;
-                                resolve();
+                                }
+                            } catch (err) {
+                                reject(err);
                             }
                         };
 
@@ -160,8 +164,7 @@
                 });
 
                 return $q.all(queue).then(function(){
-                    if (hasErrors) $q.reject(report);
-                    else $q.when(data);
+                    return hasErrors ? $q.reject(report) : $q.when(data);
                 });
             }
         }]);
